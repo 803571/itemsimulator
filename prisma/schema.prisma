@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 계정 테이블
+model Account { 
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  password    String  
+  character   Character[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// 캐릭터 테이블
+model Character {
+  id          Int       @id @default(autoincrement())
+  name        String    
+  accountId   Int 
+  account     Account   @relation(fields: [accountId], references: [id])
+  inventory   Inventory[]
+  equipment   Equipment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// 아이템 리스트 테이블
+model Item {
+  id          Int       @id @default(autoincrement())
+  name        String  
+  description String?
+  itemType    String    // ex: 무기, 방어구
+  rarity      String
+  createdAt   DateTime  @default(now())
+}
+
+// 인벤토리 테이블
+model Inventory {
+  id          Int       @id @default(autoincrement())
+  characterId Int       
+  character   Character @relation(fields: [characterId], references: [id])
+  itemId      Int
+  item        Item      @relation(fields: [itemId], references: [id])
+  quantity    Int       @default(1) //해당 아이템의 개수
+  createdAt   DateTime  @default(now())
+}
+
+// 장비창 테이블
+model Equipment {
+  id          Int       @id @default(autoincrement())
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id])
+  itemId      Int
+  item        Item      @relation(fields: [itemId], references: [id])
+  slot        String    // ex: 무기 슬롯인지, 방어구 슬롯인지?
+  createdAt   DateTime  @default(now())
+}
