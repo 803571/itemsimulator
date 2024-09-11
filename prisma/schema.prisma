@@ -15,7 +15,7 @@ datasource db {
 
 // 계정 테이블
 model Account { 
-  id                  Int           @id @default(autoincrement())
+  id                  String        @id @default(cuid())
   userId              String        @unique
   password            String  
   hashedRefreshToken  String?
@@ -27,8 +27,8 @@ model Account {
 // 캐릭터 테이블
 model Characters {
   id                  Int           @id @default(autoincrement())
-  name                String    
-  accountId           Int 
+  name                String        @unique
+  accountId           String 
   account             Account       @relation(fields: [accountId], references: [id])
   inventory           Inventory[]
   equipment           Equipment[]
