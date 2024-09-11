@@ -15,54 +15,108 @@ datasource db {
 
 // 계정 테이블
 model Account { 
-  id          Int       @id @default(autoincrement())
-  email       String    @unique
-  password    String  
-  character   Character[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                  Int           @id @default(autoincrement())
+  userId              String        @unique
+  password            String  
+  hashedRefreshToken  String?
+  characters          Characters[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 }
 
 // 캐릭터 테이블
-model Character {
-  id          Int       @id @default(autoincrement())
-  name        String    
-  accountId   Int 
-  account     Account   @relation(fields: [accountId], references: [id])
-  inventory   Inventory[]
-  equipment   Equipment[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model Characters {
+  id                  Int           @id @default(autoincrement())
+  name                String    
+  accountId           Int 
+  account             Account       @relation(fields: [accountId], references: [id])
+  inventory           Inventory[]
+  equipment           Equipment[]
+  health              Int           @default(500)       // 캐릭터 생성 시 기본 500 체력
+  power               Int           @default(100)       // 캐릭터 생성 시 기본 100 공격력
+  magicpower          Int           @default(100)       // 캐릭터 생성 시 기본 100 마법공격력
+  strength            Int           @default(4)         // 캐릭터 기본 근력스텟 4
+  dexterity           Int           @default(4)         // 캐릭터 기본 손재주스텟 4
+  intelligence        Int           @default(4)         // 캐릭터 기본 지력스텟 4
+  luck                Int           @default(4)         // 캐릭터 기본 행운스텟 4
+  arm                 Int           @default(4)         // 캐릭터 기본 물리방어력 4
+  mrm                 Int           @default(4)         // 캐릭터 기본 마법방어력 4
+  gameMoney           Int           @default(10000)     // 생성 시 기본으로 부여받는 골드 10000
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  purchaseHistory     PurchaseHistory[]
 }
 
-// 아이템 리스트 테이블
+// 아이템 테이블
 model Item {
-  id          Int       @id @default(autoincrement())
-  name        String  
-  description String?
-  itemType    String    // ex: 무기, 방어구
-  rarity      String
-  createdAt   DateTime  @default(now())
+  id                  Int           @id @default(autoincrement())
+  name                String  
+  description         String?
+  itemType            EquipmentSlot                     // ex: 무기, 방어구
+  healthBonus         Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 체력
+  powerBonus          Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 공격력
+  magicpowerBonus     Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 마법공격력
+  strengthBonus       Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 근력스텟
+  dexterityBonus      Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 손재주스텟
+  intelligenceBonus   Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 지력스텟
+  luckBonus           Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 행운스텟
+  armBonus            Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 물리방어력
+  mrmBonus            Int           @default(0)         // 아이템 장착 시 올라갈 수 있는 마법방어력
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  inventories         Inventory[]
+  equipments          Equipment[]
+  shopItems           ShopItem[]
 }
 
 // 인벤토리 테이블
 model Inventory {
-  id          Int       @id @default(autoincrement())
-  characterId Int       
-  character   Character @relation(fields: [characterId], references: [id])
-  itemId      Int
-  item        Item      @relation(fields: [itemId], references: [id])
-  quantity    Int       @default(1) //해당 아이템의 개수
-  createdAt   DateTime  @default(now())
+  id                  Int           @id @default(autoincrement())
+  characterId         Int       
+  character           Characters    @relation(fields: [characterId], references: [id])
+  itemId              Int
+  item                Item          @relation(fields: [itemId], references: [id])
+  quantity            Int           @default(1) //해당 아이템의 개수
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 }
 
 // 장비창 테이블
 model Equipment {
-  id          Int       @id @default(autoincrement())
-  characterId Int
-  character   Character @relation(fields: [characterId], references: [id])
-  itemId      Int
-  item        Item      @relation(fields: [itemId], references: [id])
-  slot        String    // ex: 무기 슬롯인지, 방어구 슬롯인지?
-  createdAt   DateTime  @default(now())
+  id                  Int           @id @default(autoincrement())
+  characterId         Int
+  character           Characters    @relation(fields: [characterId], references: [id])
+  itemId              Int
+  item                Item          @relation(fields: [itemId], references: [id])
+  equipType           EquipmentSlot                     // ex: 무기 슬롯인지, 방어구 슬롯인지?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+}
+
+// 장비 아이템 유형
+enum EquipmentSlot {
+  WEAPON
+  ARMOR
+  ACCESSORY
+}
+
+// 상점판매 아이템 테이블
+model ShopItem {
+  id                  Int           @id @default(autoincrement())
+  itemId              Int           
+  item                Item          @relation(fields: [itemId], references: [id])
+  price               Int           
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  purchaseHistories   PurchaseHistory[]
+}
+
+// 아이템 구매이력 테이블
+model PurchaseHistory {
+  id                  Int           @id @default(autoincrement())
+  characterId         Int 
+  character           Characters    @relation(fields: [characterId], references: [id])
+  shopItemId          Int 
+  shopItem            ShopItem      @relation(fields: [shopItemId], references: [id])
+  purchaseDate        DateTime      @default(now())
 }
